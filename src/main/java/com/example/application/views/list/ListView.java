@@ -2,9 +2,9 @@ package com.example.application.views.list;
 
 import com.example.application.data.entity.Contact;
 import com.example.application.data.service.CrmService;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -25,27 +25,29 @@ public class ListView extends VerticalLayout { // The view extends VerticalLayou
         addClassName("list-view");
         setSizeFull();
         configureGrid(); // The grid configuration is extracted to a separate method to keep the constructor easier to read
-        configureForm(); // Create a method for initializing the form
+        //configureForm(); // Create a method for initializing the form
+
+        form = new ContactForm(service.findAllCompanies(), service.findAllStatuses());
+        form.setWidth("25em");
+        form.addListener(ContactForm.SaveEvent.class, this::saveContact);
+        form.addListener(ContactForm.DeleteEvent.class, this::deleteContact);
+        form.addListener(ContactForm.CloseEvent.class, e -> closeEditor());
+
+        FlexLayout content = new FlexLayout(grid, form);
+        content.setFlexGrow(2, grid);
+        content.setFlexGrow(1, form);
+        content.setFlexShrink(0, form);
+        content.addClassNames("content", "gap-m");
+        content.setSizeFull();
+
         add(
                 getToolbar(),
-                getContent()); // Change the add() method to call getContent(). The method returns a HorizontalLayout
+                content); // Change the add() method to call getContent(). The method returns a HorizontalLayout
         // that wraps the form and the grid, showing them next to each other
         updateList();
-    }
-
-    private Component getContent() {
-        HorizontalLayout content = new HorizontalLayout(grid, form);
-        content.setFlexGrow(2, grid); // Use setFlexGrow() to define that the Grid should get two times the space of the form
-        content.setFlexGrow(1, form);
-        content.addClassNames("content");
-        content.setSizeFull();
-        return content;
-    }
-
-    private void configureForm() {
-        form = new ContactForm(service.findAllCompanies(), service.findAllStatuses()); // Initialize the form with empty
-        // company and status lists for now
-        form.setWidth("25em");
+        closeEditor();
+        grid.asSingleSelect().addValueChangeListener(event ->
+                editContact(event.getValue()));
     }
 
     private void configureGrid() {
@@ -66,11 +68,43 @@ public class ListView extends VerticalLayout { // The view extends VerticalLayou
         // unnecessary database calls
         filterText.addValueChangeListener(e -> updateList());
         Button addContactButton = new Button("Add contact");
+        addContactButton.addClickListener(click -> addContact());
         HorizontalLayout toolbar = new HorizontalLayout(filterText, addContactButton); // The toolbar uses a
         // HorizontalLayout to place the
         // TextField and Button next to each other.
         toolbar.addClassName("toolbar");
         return toolbar;
+    }
+    private void saveContact(ContactForm.SaveEvent event) {
+        service.saveContact(event.getContact());
+        updateList();
+        closeEditor();
+    }
+
+    private void deleteContact(ContactForm.DeleteEvent event) {
+        service.deleteContact(event.getContact());
+        updateList();
+        closeEditor();
+    }
+    public void editContact(Contact contact) {
+        if (contact == null) {
+            closeEditor();
+        } else {
+            form.setContact(contact);
+            form.setVisible(true);
+            addClassName("editing");
+        }
+    }
+
+    private void closeEditor() {
+        form.setContact(null);
+        form.setVisible(false);
+        removeClassName("editing");
+    }
+
+    private void addContact() {
+        grid.asSingleSelect().clear();
+        editContact(new Contact());
     }
 
     private void updateList() {
