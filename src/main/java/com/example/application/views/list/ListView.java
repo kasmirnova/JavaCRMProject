@@ -12,7 +12,11 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
-@Route(value = "")
+import javax.annotation.security.PermitAll;
+
+//@PermitAll
+@PermitAll
+@Route(value="", layout = MainLayout.class)
 @PageTitle("Java CRM Project")
 public class ListView extends VerticalLayout { // The view extends VerticalLayout, which places all child components vertically
     Grid<Contact> grid = new Grid<>(Contact.class); // The Grid component is typed with Contact
