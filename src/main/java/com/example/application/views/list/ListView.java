@@ -2,21 +2,27 @@ package com.example.application.views.list;
 
 import com.example.application.data.entity.Contact;
 import com.example.application.data.service.CrmService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.dom.ThemeList;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.lumo.Lumo;
 
 import javax.annotation.security.PermitAll;
 
 //@PermitAll
 @PermitAll
 @Route(value="", layout = MainLayout.class)
+
 @PageTitle("Java CRM Project")
 public class ListView extends VerticalLayout { // The view extends VerticalLayout, which places all child components vertically
     Grid<Contact> grid = new Grid<>(Contact.class); // The Grid component is typed with Contact
@@ -25,6 +31,19 @@ public class ListView extends VerticalLayout { // The view extends VerticalLayou
     CrmService service;
 
     public ListView(CrmService service) {
+        Button toggleButton = new Button("Toggle dark theme", click -> {
+            ThemeList themeList = UI.getCurrent().getElement().getThemeList(); // (1)
+
+            if (themeList.contains(Lumo.DARK)) { // (2)
+                themeList.remove(Lumo.DARK);
+            } else {
+                themeList.add(Lumo.DARK);
+            }
+        });
+
+        add(
+                toggleButton
+        );
         this.service = service;
         addClassName("list-view");
         setSizeFull();
